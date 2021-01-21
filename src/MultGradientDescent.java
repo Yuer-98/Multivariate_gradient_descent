@@ -46,9 +46,10 @@ class MultGradientDescent {
                 List<Double> tmp = new ArrayList<>();
                 yList.add(datas[i][datas[i].length-1]);
                 tmp.add(1.0);
-                for(int j=0;j<datas[i].length;j++){
+                for(int j=0;j<datas[i].length-1;j++){
                     tmp.add(datas[i][j]);
                 }
+                this.xLists.add(tmp);
             }
             this.pNum = this.xLists.get(0).size();
             this.m = this.yList.size();
@@ -74,7 +75,7 @@ class MultGradientDescent {
             for(int i=0;i<pNum;i++){
                 double term = 0;
                 for(int j=0;j<m;j++){
-                    double h = getPrediction(xLists.get(j).subList(1,xLists.get(i).size()-1));
+                    double h = getPrediction(xLists.get(j).subList(1,xLists.get(i).size()));
                     term += (h - yList.get(j)) * xLists.get(j).get(i);
                 }
                 term *= learningRate / m;
@@ -83,6 +84,34 @@ class MultGradientDescent {
             for(int i=0;i<pNum;i++){
                 parameters[i] = tmpP[i];
             }
+            times++;
+        }
+        return true;
+    }
+
+    public boolean fit(double learningRate, double maxTimes){
+        if(!this.inited){
+            gdLogger.warning("还未导入数据");
+            return false;
+        }
+        parameters = new double[pNum];
+        double preCost = getCost() + 1;
+        double[] tmpP = new double[pNum];
+        int times = 0;
+        while(Math.abs(getCost()-preCost)>0.0001&&times<maxTimes){
+            for(int i=0;i<pNum;i++){
+                double term = 0;
+                for(int j=0;j<m;j++){
+                    double h = getPrediction(xLists.get(j).subList(1,xLists.get(i).size()));
+                    term += (h - yList.get(j)) * xLists.get(j).get(i);
+                }
+                term *= learningRate / m;
+                tmpP[i] = parameters[i] - term;
+            }
+            for(int i=0;i<pNum;i++){
+                parameters[i] = tmpP[i];
+            }
+            times++;
         }
         return true;
     }
@@ -90,14 +119,14 @@ class MultGradientDescent {
     public double getCost(){
         double ans = 0;
         for(int i=0;i<m;i++){
-            double h = getPrediction(xLists.get(i).subList(1,xLists.get(i).size()-1));
+            double h = getPrediction(xLists.get(i).subList(1,xLists.get(i).size()));
             ans += Math.pow(h - yList.get(i), 2);
         }
         return ans / (2*m);
     }
 
     public double getPrediction(List<Double> xList){
-        if(xList.size()!=pNum){
+        if(xList.size()!=pNum-1){
             gdLogger.warning("数据个数不对");
             return 0.0;
         }
@@ -118,5 +147,10 @@ class MultGradientDescent {
             ans += parameters[i]*xList[i-1];
         }
         return ans;
+    }
+
+    public void printDatas(){
+        System.out.println("yList: " + yList);
+        System.out.println("xList: " + xLists);
     }
 }

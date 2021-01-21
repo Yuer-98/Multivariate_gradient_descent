@@ -11,8 +11,9 @@ public class testGD {
         datas[2] = data3;
 
         multGradientDescent.initData(datas);
-        multGradientDescent.fit(0.001);
+        multGradientDescent.fit(0.001,122800);
         double prediction = multGradientDescent.getPrediction(data4);
         System.out.println(prediction);
+        multGradientDescent.printDatas();
     }
 }
