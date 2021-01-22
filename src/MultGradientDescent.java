@@ -1,7 +1,12 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.text.DecimalFormat;
 
+/**多元线性回归的梯度下降
+ * 两种方式停止迭代
+ * 1.最大迭代次数
+ * 2.通过前后两次迭代代价函数的差值判断收敛*/
 class MultGradientDescent {
     private Logger gdLogger = Logger.getLogger("gdLogger");
     private List<List<Double>> xLists;
@@ -71,7 +76,8 @@ class MultGradientDescent {
         double preCost = getCost() + 1;
         double[] tmpP = new double[pNum];
         int times = 0;
-        while(Math.abs(getCost()-preCost)>0.0001&&times<maxTimes){
+        while(Math.abs(getCost()-preCost)>0.0000000001&&times<maxTimes){
+            preCost = getCost();
             for(int i=0;i<pNum;i++){
                 double term = 0;
                 for(int j=0;j<m;j++){
@@ -98,7 +104,8 @@ class MultGradientDescent {
         double preCost = getCost() + 1;
         double[] tmpP = new double[pNum];
         int times = 0;
-        while(Math.abs(getCost()-preCost)>0.0001&&times<maxTimes){
+        while(Math.abs(getCost()-preCost)>0.0000000001&&times<maxTimes){
+            preCost = getCost();
             for(int i=0;i<pNum;i++){
                 double term = 0;
                 for(int j=0;j<m;j++){
@@ -113,6 +120,35 @@ class MultGradientDescent {
             }
             times++;
         }
+        return true;
+    }
+
+    public boolean fit(double learningRate, double maxTimes, double costDifference){
+        if(!this.inited){
+            gdLogger.warning("还未导入数据");
+            return false;
+        }
+        parameters = new double[pNum];
+        double preCost = getCost() + costDifference + 1;
+        double[] tmpP = new double[pNum];
+        int times = 0;
+        while(Math.abs(getCost()-preCost)>costDifference&&times<maxTimes){
+            preCost = getCost();
+            for(int i=0;i<pNum;i++){
+                double term = 0;
+                for(int j=0;j<m;j++){
+                    double h = getPrediction(xLists.get(j).subList(1,xLists.get(i).size()));
+                    term += (h - yList.get(j)) * xLists.get(j).get(i);
+                }
+                term *= learningRate / m;
+                tmpP[i] = parameters[i] - term;
+            }
+            for(int i=0;i<pNum;i++){
+                parameters[i] = tmpP[i];
+            }
+            times++;
+        }
+        System.out.println("times" + times);
         return true;
     }
 
@@ -149,8 +185,23 @@ class MultGradientDescent {
         return ans;
     }
 
+    public double[] getModel(){
+        return this.parameters;
+    }
+
     public void printDatas(){
         System.out.println("yList: " + yList);
         System.out.println("xList: " + xLists);
+    }
+
+    public void printModel(){
+        StringBuilder expression = new StringBuilder();
+        DecimalFormat df = new DecimalFormat("######0.000");
+        expression.append(df.format(parameters[0])+" + ");
+        for(int i=1;i<parameters.length;i++){
+            expression.append(df.format(parameters[i])+"·x_"+i+" + ");
+        }
+        expression.delete(expression.length()-3,expression.length());
+        System.out.println("表达式为：" + expression);
     }
 }
